@@ -8,7 +8,7 @@ Author URI: http://austinmatzko.com
 Version: 1.0
 */
 
-if ( ! function_exists( 'load_filosofo_js_common_library' ) ) {
+if ( ! function_exists( 'init_filosofo_js_common_library' ) ) {
 
 	function init_filosofo_js_common_library()
 	{
