@@ -343,11 +343,13 @@ var FilosofoJS = function(scope) {
 	}	
 
 	return {
-		addEvent:addEvent,	
+		addEvent:addEvent,
+		Animation:Animation,
 		attachClassClickListener:attachClassClickListener, 
 		doWhenReady:ready,
 		fade:fade,
 		getEventTarget:getEventTarget,
+		isObjProperty:isObjProp,
 		postReq:postReq,
 		scrollToElement:scrollToElement
 	}
