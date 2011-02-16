@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Filosofo JavaScript Library
-Plugin URI:
+Plugin URI: http://austinmatzko.com/wordpress-plugins/wp-filosofo-js-library/
 Description: A library of common JS functionality used by Austin Matzko (filosofo) in WordPress plugins.
 Author: Austin Matzko
 Author URI: http://austinmatzko.com
