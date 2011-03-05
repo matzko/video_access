@@ -120,6 +120,74 @@ var FilosofoJS = function(scope) {
 		return e.target || e.srcElement;
 	},
 
+	/**
+	 * @todo better handling of different elements
+	 * @todo better handling of diff submit buttons, for example
+	 */
+	getFormData = function(form) {
+		if ( ! form )
+			return {};
+		var elTypes = [ 'button', 'input', 'select', 'textarea' ],
+		i, j = elTypes.length, k = 0,
+		objType, 
+		data  = {},
+		fields;
+
+		while ( j-- ) {
+			fields = form.getElementsByTagName( elTypes[j] );
+			i = fields.length;
+			while ( i-- ) {
+				if ( fields[i] && fields[i].name ) {
+					objType = ( fields[i].type + '' ).toLowerCase();
+					if ( 'select-multiple' == objType ) {
+						k = fields[i].options.length;
+						if ( -1 < fields[i].selectedIndex ) {
+							data[fields[i].name] = [];
+							while ( k-- ) {
+								if ( fields[i].options[k].selected ) {
+									data[fields[i].name][data[fields[i].name].length] = fields[i].options[k].value;
+								}
+							}
+						}
+					} else if ( 'select' == fields[i].name ) {
+						if ( fields[i].options && fields[i].options[fields[i].selectedIndex] ) {
+							data[fields[i].name] = fields[i].options[fields[i].selectedIndex];
+						} else if ( fields[i].value ) {
+							data[fields[i].name] = fields[i].value;
+						}
+					} else if ( 'button' == fields[i].nodeName.toLowerCase() ) {
+						if ( fields[i].name ) {
+							if ( fields[i].getAttribute('value') ) {
+								data[fields[i].name] = fields[i].getAttribute('value');
+							} else if ( fields[i].value ) {
+								data[fields[i].name] = fields[i].value;
+							} else if ( fields[i].innerText || fields[i].textContent ) {
+								data[fields[i].name] = ( fields[i].innerText || fields[i].textContent );
+							}
+						}
+					} else if ( 'checkbox' == objType ) {
+						if ( ! data[fields[i].name] || ! data[fields[i].name][0] ) {
+							data[fields[i].name] = [];
+						}
+						if ( fields[i].checked ) {
+							data[fields[i].name][data[fields[i].name].length] = fields[i].value;
+						}
+					} else if (
+						! objType || 
+						'radio' != objType ||
+						( 
+							'radio' == objType &&
+							fields[i].checked 
+						)
+					) {
+						data[fields[i].name] = fields[i].value;
+					}
+				}
+			}
+		}
+		return data;	
+	},
+
 
 	/**
 	 * Animation methods
@@ -349,6 +417,7 @@ var FilosofoJS = function(scope) {
 		doWhenReady:ready,
 		fade:fade,
 		getEventTarget:getEventTarget,
+		getFormData:getFormData,
 		isObjProperty:isObjProp,
 		postReq:postReq,
 		scrollToElement:scrollToElement
