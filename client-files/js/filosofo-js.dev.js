@@ -121,6 +121,28 @@ var FilosofoJS = function(scope) {
 	},
 
 	/**
+	 * Set the input value, even if that means a multi-dimensional object.
+	 */
+	_setValueFromInputName = function( name, value ) {
+		var match = /([^\[]*)\[([^\]]*)\]/.exec( name );	
+		if ( match && match[0] && match[1] && match[2] ) {
+			if ( ! this[match[1]] )
+				this[match[1]] = {};
+			this[match[1]][match[2]] = value;
+
+		// checkboxes with attributes like: name="myname[]"
+		} else if ( match && match[0] && match[1] && '' === match[2] ) {
+			if ( ! this[match[1]] || ! this[match[1]][0] ) {
+				this[match[1]] = [];
+			}
+			
+			this[match[1]][this[match[1]].length] = value;
+		} else {
+			this[name] = value;
+		}
+	},
+
+	/**
 	 * @todo better handling of different elements
 	 * @todo better handling of diff submit buttons, for example
 	 */
@@ -131,7 +153,8 @@ var FilosofoJS = function(scope) {
 		i, j = elTypes.length, k = 0,
 		objType, 
 		data  = {},
-		fields;
+		fields,
+		fieldValue;
 
 		while ( j-- ) {
 			fields = form.getElementsByTagName( elTypes[j] );
@@ -143,34 +166,33 @@ var FilosofoJS = function(scope) {
 						k = fields[i].options.length;
 						if ( -1 < fields[i].selectedIndex ) {
 							data[fields[i].name] = [];
+							fieldValue = [];
 							while ( k-- ) {
 								if ( fields[i].options[k].selected ) {
-									data[fields[i].name][data[fields[i].name].length] = fields[i].options[k].value;
+									fieldValue[fieldValue.length] = fields[i].options[k].value;
 								}
 							}
+							_setValueFromInputName.call(data, fields[i].name, fieldValue);
 						}
 					} else if ( 'select' == fields[i].name ) {
 						if ( fields[i].options && fields[i].options[fields[i].selectedIndex] ) {
-							data[fields[i].name] = fields[i].options[fields[i].selectedIndex];
+							_setValueFromInputName.call(data, fields[i].name, fields[i].options[fields[i].selectedIndex]);
 						} else if ( fields[i].value ) {
-							data[fields[i].name] = fields[i].value;
+							_setValueFromInputName.call(data, fields[i].name, fields[i].value);
 						}
 					} else if ( 'button' == fields[i].nodeName.toLowerCase() ) {
 						if ( fields[i].name ) {
 							if ( fields[i].getAttribute('value') ) {
-								data[fields[i].name] = fields[i].getAttribute('value');
+								_setValueFromInputName.call(data, fields[i].name, fields[i].getAttribute('value'));
 							} else if ( fields[i].value ) {
-								data[fields[i].name] = fields[i].value;
+								_setValueFromInputName.call(data, fields[i].name, fields[i].value);
 							} else if ( fields[i].innerText || fields[i].textContent ) {
-								data[fields[i].name] = ( fields[i].innerText || fields[i].textContent );
+								_setValueFromInputName.call(data, fields[i].name, ( fields[i].innerText || fields[i].textContent ) );
 							}
 						}
 					} else if ( 'checkbox' == objType ) {
-						if ( ! data[fields[i].name] || ! data[fields[i].name][0] ) {
-							data[fields[i].name] = [];
-						}
 						if ( fields[i].checked ) {
-							data[fields[i].name][data[fields[i].name].length] = fields[i].value;
+							_setValueFromInputName.call(data, fields[i].name, fields[i].value);
 						}
 					} else if (
 						! objType || 
@@ -180,11 +202,12 @@ var FilosofoJS = function(scope) {
 							fields[i].checked 
 						)
 					) {
-						data[fields[i].name] = fields[i].value;
+						_setValueFromInputName.call(data, fields[i].name, fields[i].value);
 					}
 				}
 			}
 		}
+		console.log(data)
 		return data;	
 	},
 
