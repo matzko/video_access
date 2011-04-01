@@ -3,10 +3,11 @@ var FilosofoJS = function(scope) {
 		if (obj.addEventListener)
 			obj.addEventListener(type, fn, false);
 		else if (obj.attachEvent)
-			obj.attachEvent('on' + type, function() { return fn.call(obj, window.event);});
+			obj.attachEvent('on' + type, function() { return fn.call(obj, w.event);});
 	},
 
 	d = document,
+	w = window,
 
 	XHR = (function() { 
 		var i, 
@@ -116,7 +117,7 @@ var FilosofoJS = function(scope) {
 	 * @return object The target object.
 	 */
 	getEventTarget = function(e) {
-		e = e || window.event;
+		e = e || w.event;
 		return e.target || e.srcElement;
 	},
 
@@ -209,6 +210,44 @@ var FilosofoJS = function(scope) {
 		}
 		console.log(data)
 		return data;	
+	},
+
+
+	/**
+	 * Create a cookie
+	 * @param name The name of the cookie
+	 * @param value The value of the cookie
+	 * @param days How many days the cookie will last
+	 */
+	createCookie = function( name, value, days ) {
+		var date = new Date(),
+		expires = '';
+
+		if ( days ) {
+			date.setTime( date.getTime() + ( days * 24 * 60 * 60 * 1000 ) );
+			expires = "; expires=" + ( date.toUTCString ? date.toUTCString() : date.toGMTString() );
+		}
+
+		d.cookie = name+"="+value+expires+"; path=/";
+	},
+
+	/**
+	 * Get a cookie's value
+	 * @param name The name of the cookie to get
+	 * @return string The value of the cookie
+	 */
+	readCookie = function( name ) {
+		var nameEQ = name + "=",
+		ca = d.cookie.split(';'),
+		i;
+
+		for(i = 0; i < ca.length; i++ ) {
+			while( ca[i].charAt(0) == ' ' ) 
+				ca[i] = ca[i].substring( 1, ca[i].length );
+			if (ca[i].indexOf( nameEQ ) == 0 ) 
+				return ca[i].substring( nameEQ.length, ca[i].length );
+		}
+		return null;
 	},
 
 
@@ -419,7 +458,7 @@ var FilosofoJS = function(scope) {
 		if ( callback )
 			loadedCallback = callback;
 		addEvent(d, 'DOMContentLoaded', eventDOMLoaded );
-		addEvent(window, 'load', eventDOMLoaded );
+		addEvent(w, 'load', eventDOMLoaded );
 	},
 	
 	initialized = false,
@@ -437,12 +476,14 @@ var FilosofoJS = function(scope) {
 		addEvent:addEvent,
 		Animation:Animation,
 		attachClassClickListener:attachClassClickListener, 
+		createCookie:createCookie,
 		doWhenReady:ready,
 		fade:fade,
 		getEventTarget:getEventTarget,
 		getFormData:getFormData,
 		isObjProperty:isObjProp,
 		postReq:postReq,
+		readCookie:readCookie,
 		scrollToElement:scrollToElement
 	}
 }
