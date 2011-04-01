@@ -219,7 +219,7 @@ var FilosofoJS = function(scope) {
 	 * @param value The value of the cookie
 	 * @param days How many days the cookie will last
 	 */
-	createCookie = function( name, value, days ) {
+	setCookie = function( name, value, days ) {
 		var date = new Date(),
 		expires = '';
 
@@ -236,7 +236,7 @@ var FilosofoJS = function(scope) {
 	 * @param name The name of the cookie to get
 	 * @return string The value of the cookie
 	 */
-	readCookie = function( name ) {
+	getCookie = function( name ) {
 		var nameEQ = name + "=",
 		ca = d.cookie.split(';'),
 		i;
@@ -476,14 +476,14 @@ var FilosofoJS = function(scope) {
 		addEvent:addEvent,
 		Animation:Animation,
 		attachClassClickListener:attachClassClickListener, 
-		createCookie:createCookie,
 		doWhenReady:ready,
 		fade:fade,
+		getCookie:getCookie,
 		getEventTarget:getEventTarget,
 		getFormData:getFormData,
 		isObjProperty:isObjProp,
 		postReq:postReq,
-		readCookie:readCookie,
-		scrollToElement:scrollToElement
+		scrollToElement:scrollToElement,
+		setCookie:setCookie
 	}
 }
