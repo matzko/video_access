@@ -208,7 +208,6 @@ var FilosofoJS = function(scope) {
 				}
 			}
 		}
-		console.log(data)
 		return data;	
 	},
 
