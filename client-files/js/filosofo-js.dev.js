@@ -227,7 +227,7 @@ var FilosofoJS = function(scope) {
 			expires = "; expires=" + ( date.toUTCString ? date.toUTCString() : date.toGMTString() );
 		}
 
-		d.cookie = name+"="+value+expires+"; path=/";
+		d.cookie = name+"=" + urlencode(value) + expires + "; path=/";
 	},
 
 	/**
