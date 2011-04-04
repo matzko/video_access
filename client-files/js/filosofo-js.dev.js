@@ -244,7 +244,7 @@ var FilosofoJS = function(scope) {
 			while( ca[i].charAt(0) == ' ' ) 
 				ca[i] = ca[i].substring( 1, ca[i].length );
 			if (ca[i].indexOf( nameEQ ) == 0 ) 
-				return ca[i].substring( nameEQ.length, ca[i].length );
+				return decodeURIComponent( ca[i].substring( nameEQ.length, ca[i].length ) );
 		}
 		return null;
 	},
