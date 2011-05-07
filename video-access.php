@@ -49,7 +49,6 @@ class Video_Access_Control
 		add_action( 'add_attachment', array(&$video_transcoding_control, 'remote_transcode_one_video' ) );
 		add_action( 'video_access_markup', array(&$this, 'event_video_access_markup' ) );
 		add_action( 'init', array(&$this, 'event_init' ), 1 );
-		add_action( 'parse_query', array($this, 'event_parse_query' ) );
 		add_action( 'template_redirect', array(&$this, 'event_template_redirect' ) );
 		add_action( 'video_transcode_complete', array( $this, 'event_video_transcode_complete' ) ); 
 		add_action( 'wp_footer', array(&$this, 'event_wp_footer' ) );
@@ -59,7 +58,6 @@ class Video_Access_Control
 
 		add_filter( 'flexible_uploader_uploads_dir', array(&$this, 'filter_flexible_uploader_uploads_dir' ) ); 
 		add_filter( 'flex_uploader_attachment_properties', array($this->model, 'filter_attach_props_to_set_parent' ), 10, 2 );
-		add_filter( 'get_edit_post_link', array(&$this, 'filter_get_edit_post_link' ), 10, 3 );
 		add_filter( 'the_content', array(&$this, 'filter_late_the_content' ), 99 );
 		add_filter( 'upload_mimes', array(&$this, 'filter_upload_mimes_add'), 99 );
 		add_filter( 'video_transcoding_create_thumbnail_path', array($this, 'filter_video_transcoding_create_thumbnail_path'), 10, 5 ); 
@@ -220,93 +218,16 @@ class Video_Access_Control
 			wp_enqueue_script(
 				'video-access',
 				plugins_url(
-					'client-files/js/video-accesss.js',
+					'client-files/js/video-access.js',
 					__FILE__
 				),
 				array( 'filosofo-common-js', 'flexible-uploader', 'json-rpc-api-helper' )
 			);
 
-			/*
-			wp_enqueue_script(
-				'video-access-easing',
-				plugins_url(
-					'client-files/js/fancybox/jquery.easing-1.3.pack.js',
-					__FILE__
-				),
-				array( 'jquery' )
-			);
-
-			wp_enqueue_script(
-				'video-access-lightbox',
-				plugins_url(
-					'client-files/js/fancybox/jquery.fancybox-1.3.4.pack.js',
-					__FILE__
-				),
-				array( 'jquery', 'video-access-easing' )
-			);
-
-			wp_enqueue_style(
-				'video-access-lightbox-style',
-				plugins_url(
-					'client-files/js/fancybox/jquery.fancybox-1.3.4.css',
-					__FILE__
-				)
-			);
-			/**/
-
-			wp_enqueue_script(
-				'video-access-lightbox',
-				plugins_url(
-					'client-files/js/jqmodal/jqModal.js',
-					__FILE__
-				),
-				array( 'jquery' )
-			);
-
-			wp_enqueue_style(
-				'video-access-lightbox-style',
-				plugins_url(
-					'client-files/js/jqmodal/jqModal.css',
-					__FILE__
-				)
-			);
 		}
 
 		$this->_listen_for_submissions();
 	}
-
-	public function event_parse_query( &$query )
-	{
-		if ( 
-			! empty( $query->query_vars ) &&
-			! empty( $query->query_vars['post_type'] ) &&
-			'site-video' == $query->query_vars['post_type']
-		) {
-			if ( 
-				! empty( $query->query_vars['video-query-type'] ) &&
-				! empty( $query->query_vars['video-query-term'] ) &&
-				'video-type' == $query->query_vars['video-query-type'] 
-			) {
-				if ( 'user' == $query->query_vars['video-query-term'] ) {
-					add_filter( 'posts_join', array($this, 'filter_join_for_author_type') );
-					add_filter( 'posts_where', array($this, 'filter_where_for_non_coach_authors') );
-				} elseif ( 'coach' ==  $query->query_vars['video-query-term'] ) {
-					add_filter( 'posts_join', array($this, 'filter_join_for_author_type') );
-					add_filter( 'posts_where', array($this, 'filter_where_for_coach_authors') );
-				}
-			}
-		}
-	}
-		public function filter_join_for_author_type( $join = '' )
-		{
-			global $wpdb;
-			$join .= " LEFT JOIN {$wpdb->usermeta} 
-				AS coach_tbl 
-				ON {$wpdb->posts}.post_author = coach_tbl.user_id
-			";
-			remove_filter( 'posts_join', array($this, 'filter_join_for_author_type') );
-			return $join;
-		}
 
 	public function event_template_redirect()
 	{
@@ -320,7 +241,6 @@ class Video_Access_Control
 	 */
 	public function event_video_transcode_complete( $video_attachment_id = 0 )
 	{
-		global $wpdb;
 		$video_attachment_id = (int) $video_attachment_id;
 		$video_id = (int) get_post_meta( $video_attachment_id, '_parent_site_video', true );
 		if ( ! empty( $video_id ) && 'draft' == get_post_status( $video_id ) ) {
@@ -330,15 +250,6 @@ class Video_Access_Control
 				$data['post_name'] = sanitize_title( $data['post_title'] );
 			}
 			wp_update_post( $data );
-
-			/*
-			$wpdb->update( 
-				$wpdb->posts, 
-				array( 'post_status' => 'publish' ), 
-				array( 'ID' => $video_id )
-			);
-			wp_publish_post( $video_id );
-			*/
 		}
 	}
 
@@ -486,22 +397,6 @@ class Video_Access_Control
 		}
 
 		return $user_dir;
-	}
-
-	/**
-	 * Make video edit links link to video page with endpoint.
-	 *
-	 * @param string $url The URL to the post object edit page.
-	 * @param int $object_id The ID of the video object.
-	 * @param string $context The context of the video object.
-	 */
-	public function filter_get_edit_post_link( $url = '', $object_id = 0, $context = '' )
-	{
-		$post_obj = get_post( $object_id );	
-		if ( isset( $post_obj->post_type ) && 'site-video' == $post_obj->post_type ) {
-			$url = trailingslashit( get_permalink( $object_id ) ) . 'edit-video/' . $object_id . '/';
-		}
-		return $url;
 	}
 	
 	protected function _listen_for_requests()
@@ -1169,57 +1064,6 @@ class Video_Access_View
 
 	public function print_footer( $args = array() )
 	{
-		?>
-		<div class="lightbox-parent">
-			<div id="video-lightbox-wrap" class="jqmWindow">
-				<?php if ( ! empty( $args['form_markup'] ) ) : ?>
-					<?php echo  $args['form_markup']; ?>
-				<?php endif; ?>
-			</div><!-- #video-ligthbox-wrap -->
-		</div><!-- .lightbox-parent -->
-		<script type="text/javascript">
-		var videoAccessL10n = {
-			'confirm_delete_video':'<?php echo esc_js( __( 'Are you sure you want to delete this video? Click [OK] to delete.', 'video-access' ) ); ?>',
-			'processing':'<?php echo esc_js( __( 'Processing&hellip;', 'video-access' ) ); ?>',
-			'saved':'<?php echo esc_js( __( 'Saved', 'video-access' ) ); ?>'
-		}
-
-		jQuery(function($) {
-			var link = document.getElementById( 'show-upload-link' );
-			if ( link ) {
-				/*
-				link.href = link.href.replace( /^.*#/, '#' );
-				j( link ).fancybox();
-				j( link ).fancybox({
-				
-					'titleShow'     : false,
-					'transitionIn'	: 'elastic',
-					'transitionOut'	: 'elastic',
-					'easingIn'      : 'easeOutBack',
-					'easingOut'     : 'easeInBack'
-				});
-				*/
-				$('#video-lightbox-wrap').jqm();
-				$('#video-lightbox-wrap').hide().appendTo('body');
-				$('#video-lightbox-wrap').jqmAddTrigger( link ); 
-			}
-		});
-		</script>
-		<?php
-	}
-
-	public function print_video_rating( $rating = 0 )
-	{
-return;
-		?>
-		<div class="video-rating-wrap rating-<?php echo round( $rating, 1 ); ?>">
-			<a href="#" class="rating-1">1 Star</a>
-			<a href="#" class="rating-2">2 Star</a>
-			<a href="#" class="rating-3">3 Star</a>
-			<a href="#" class="rating-4">4 Star</a>
-			<a href="#" class="rating-5">5 Star</a>
-		</div>
-		<?php 
 	}
 }
 
