@@ -729,6 +729,9 @@ class Video_Access_Model
 		$video_id = (int) $video_id;
 		Video_Access_Control::switch_to_blog( $blog_id );
 		$file = get_post_meta( $video_id, 'video_file_full', true );
+		if ( empty( $file ) ) {
+			$file = get_attached_file( $video_id );
+		}
 		Video_Access_Control::restore_current_blog();
 
 		return $file;
