@@ -916,7 +916,7 @@ class Video_Access_Model
 		
 		$hash = get_post_meta( $video_id, 'video_file_hash', true );
 		
-		$url = get_site_url( $blog_id, sprintf(
+		$url = get_home_url( $blog_id, sprintf(
 			'/video-file/%1$s/%2$s/%3$s/',
 			$_blog_id,
 			$hash,
@@ -934,7 +934,7 @@ class Video_Access_Model
 		$video_id = (int) $video_id;
 		Video_Access_Control::switch_to_blog( $blog_id );
 		$hash = get_post_meta( $video_id, 'video_file_hash', true );
-		$url = get_site_url( $blog_id, sprintf(
+		$url = get_home_url( $blog_id, sprintf(
 			'/video-file/%1$s/%2$s/%3$s/ext.mp4',
 			$blog_id,
 			$hash,
