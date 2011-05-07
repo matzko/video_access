@@ -54,6 +54,7 @@ class Video_Access_Control
 
 		add_action( 'add_attachment', array(&$video_transcoding_control, 'remote_transcode_one_video' ) );
 		add_action( 'video_access_markup', array(&$this, 'event_video_access_markup' ) );
+		add_action( 'video_access_player', array($this, 'event_video_access_player'), 10, 3 );
 		add_action( 'init', array(&$this, 'event_init' ), 1 );
 		add_action( 'template_redirect', array(&$this, 'event_template_redirect' ) );
 		add_action( 'video_transcode_complete', array( $this, 'event_video_transcode_complete' ) ); 
@@ -168,6 +169,18 @@ class Video_Access_Control
 				}
 			}
 		}
+	}
+
+	public function event_video_access_player( $attach_id = 0, $width = 0, $height = 0 )
+	{
+		global $local_video_player;
+
+		$attach_id = (int) $attach_id;
+		$height = (int) $height;
+		$width = (int) $width;
+
+		$video_url = wp_get_attachment_url( $attach_id );
+		echo $local_video_player->print_video_player( $video_url, 'single-video-object-' . $attach_id, $height, $width );
 	}
 
 	public function event_init()
@@ -495,7 +508,6 @@ class Video_Access_Control
 					$video_id = $this->model->get_video_by_hash( $blog_id, $video_file );
 					$name = $this->model->get_video_filename( $blog_id, $video_id );
 					$file_path = $this->model->get_video_actual_path( $blog_id, $video_id );
-					
 					if ( file_exists( $file_path ) ) {
 						$size = filesize( $file_path );
 						@ header('Content-Type: application/octet-stream');
