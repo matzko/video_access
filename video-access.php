@@ -786,8 +786,8 @@ class Video_Access_Model
 		Video_Access_Control::switch_to_blog( $blog_id );
 
 		$actual_file = get_post_meta( $video_id, 'video_file', true );
-		$ext = array_pop( explode( '.', $actual_file ) );
-		$ext = 3 == strlen( $ext ) ? $ext : 'mp4';
+		$file = $this->get_video_actual_path( $blog_id, $video_id );
+		$ext = preg_match( '#\.([a-z]{3})$#', $file, $matches ) ? $matches[1] : 'mp4';
 
 		$parent_video_title = preg_replace( '#[^a-zA-Z0-9_]#', '_', get_the_title( get_post_meta( $video_id, '_parent_site_video', true ) ) );
 
@@ -948,9 +948,11 @@ class Video_Access_Model
 		$blog_id = (int) $blog_id;
 		$video_id = (int) $video_id;
 		Video_Access_Control::switch_to_blog( $blog_id );
+		$file = $this->get_video_actual_path( $blog_id, $video_id );
+		$ext = preg_match( '#\.([a-z]{3})$#', $file, $matches ) ? $matches[1] : 'mp4';
 		$hash = get_post_meta( $video_id, 'video_file_hash', true );
 		$url = get_home_url( $blog_id, sprintf(
-			'/video-file/%1$s/%2$s/%3$s/ext.mp4',
+			'/video-file/%1$s/%2$s/%3$s/ext.' . $ext,
 			$blog_id,
 			$hash,
 			'video'
