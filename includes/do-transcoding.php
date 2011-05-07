@@ -34,7 +34,9 @@ error_log( sprintf(
 	$user_id
 ) );
 
-switch_to_blog( $blog_id );
+if ( function_exists( 'switch_to_blog' ) ) {	
+	switch_to_blog( $blog_id );
+}
 
 global $video_transcoding_control;
 

@@ -586,6 +586,24 @@ class Video_Access_Control
 			}
 		}
 	}
+
+	public static function restore_current_blog()
+	{
+		if ( function_exists( 'restore_current_blog' ) ) {
+			return restore_current_blog();
+		} else {
+			return false;
+		}
+	}
+
+	public static function switch_to_blog( $blog_id = 0 )
+	{
+		if ( function_exists( 'switch_to_blog' ) ) {
+			return switch_to_blog( $blog_id );
+		} else {
+			return false;
+		}
+	}
 }
 
 class Video_Access_Model
@@ -655,9 +673,9 @@ class Video_Access_Model
 	{
 		$blog_id = (int) $blog_id;
 		$video_id = (int) $video_id;
-		switch_to_blog( $blog_id );
+		Video_Access_Control::switch_to_blog( $blog_id );
 		$file = get_post_meta( $video_id, 'video_file_full', true );
-		restore_current_blog();
+		Video_Access_Control::restore_current_blog();
 
 		return $file;
 	}
@@ -696,7 +714,7 @@ class Video_Access_Model
 	{
 		$blog_id = (int) $blog_id;
 		$video_id = (int) $video_id;
-		switch_to_blog( $blog_id );
+		Video_Access_Control::switch_to_blog( $blog_id );
 
 		$actual_file = get_post_meta( $video_id, 'video_file', true );
 		$ext = array_pop( explode( '.', $actual_file ) );
@@ -707,7 +725,7 @@ class Video_Access_Model
 		$filename = empty( $parent_video_title ) ? get_post_meta( $video_id, 'video_file_hash', true ) : $parent_video_title;
 
 		$filename .= '.' . $ext;
-		restore_current_blog();
+		Video_Access_Control::restore_current_blog();
 
 		return $filename;
 	}
@@ -725,7 +743,7 @@ class Video_Access_Model
 		$blog_id = (int) $blog_id;
 		$video_id = (int) $video_id;
 
-		switch_to_blog( $blog_id );
+		Video_Access_Control::switch_to_blog( $blog_id );
 
 		$attachment_id = (int) get_post_meta( $video_id, 'image_attachment_id', true );
 
@@ -749,7 +767,7 @@ class Video_Access_Model
 			$file = $this->_get_image_path_by_size( $attachment_id, $image_type );
 		}
 
-		restore_current_blog();
+		Video_Access_Control::restore_current_blog();
 
 		return $file;
 	}	
@@ -829,7 +847,7 @@ class Video_Access_Model
 			$_blog_id = (int) $blog_id;
 		}
 
-		switch_to_blog( $_blog_id );
+		Video_Access_Control::switch_to_blog( $_blog_id );
 		
 		$hash = get_post_meta( $video_id, 'video_file_hash', true );
 		
@@ -840,7 +858,7 @@ class Video_Access_Model
 			$size
 		) );
 
-		restore_current_blog();
+		Video_Access_Control::restore_current_blog();
 
 		return $url;
 	}
@@ -849,7 +867,7 @@ class Video_Access_Model
 	{
 		$blog_id = (int) $blog_id;
 		$video_id = (int) $video_id;
-		switch_to_blog( $blog_id );
+		Video_Access_Control::switch_to_blog( $blog_id );
 		$hash = get_post_meta( $video_id, 'video_file_hash', true );
 		$url = get_site_url( $blog_id, sprintf(
 			'/video-file/%1$s/%2$s/%3$s/ext.mp4',
