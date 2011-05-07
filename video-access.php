@@ -73,6 +73,7 @@ class Video_Access_Control
 		add_filter( 'wp_flexible_uploader_form_extra_fields', array(&$this, 'filter_wp_flexible_uploader_form_extra_fields' ) ); 
 		add_filter( 'wp_flexible_uploader_form_instructions', '__return_false' );
 		add_filter( 'wp_flexible_uploader_form_submit', '__return_false' );
+		add_filter( 'wp_handle_upload', array( $this, 'filter_wp_handle_upload' ), 10, 2 );
 
 		add_image_size( 'video-thumbnail', 95, 64, true );
 	}
@@ -403,6 +404,36 @@ class Video_Access_Control
 		}
 
 		return $user_dir;
+	}
+
+	/**
+	 * Attempt to move uploaded videos to the private directory.
+	 *
+	 * @param array $file_data The uploaded file data from WP's uploader: 
+	 *	It has 3 indexes:
+	 *		- 'file' : The path to the uploaded file.
+	 *		- 'type' : The mime type of the the uploaded file.
+	 *		- 'url' : The URL to the uploaded file.
+	 * @param string $upload_location WP's identifier for where the upload is occurring ('sideload' or 'upload').
+	 * @return array $file_data, filtered.
+	 */
+	public function filter_wp_handle_upload( $file_data = array(), $upload_location = 'upload' )
+	{
+		if (
+			isset( $file_data['file'] ) &&
+			file_exists( $file_data['file'] ) &&
+			isset( $file_data['type'] )
+		) {
+			$types = explode( '/', $file_data['type'] );
+			if ( in_array( 'video', $types ) ) {
+				$new_dir = $this->filter_flexible_uploader_uploads_dir();
+				$full_file_name = $new_dir . DIRECTORY_SEPARATOR . basename( $file_data['file'] );
+				if ( rename( $file_data['file'], $full_file_name ) ) {
+					$file_data['file'] = $full_file_name;
+				}
+			}
+		}
+		return $file_data;
 	}
 	
 	protected function _listen_for_requests()
