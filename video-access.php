@@ -73,6 +73,7 @@ class Video_Access_Control
 		add_filter( 'wp_flexible_uploader_form_extra_fields', array(&$this, 'filter_wp_flexible_uploader_form_extra_fields' ) ); 
 		add_filter( 'wp_flexible_uploader_form_instructions', '__return_false' );
 		add_filter( 'wp_flexible_uploader_form_submit', '__return_false' );
+		add_filter( 'wp_get_attachment_url', array( $this, 'filter_wp_get_attachment_url' ), 10, 2 );
 		add_filter( 'wp_handle_upload', array( $this, 'filter_wp_handle_upload' ), 10, 2 );
 
 		add_image_size( 'video-thumbnail', 95, 64, true );
@@ -404,6 +405,22 @@ class Video_Access_Control
 		}
 
 		return $user_dir;
+	}
+
+	public function filter_wp_get_attachment_url( $url = '', $attach_id = 0 )
+	{
+		$mime_types = explode( '/', get_post_mime_type( $attach_id ) );
+		if ( in_array( 'video', $mime_types ) ) {
+			$hash = $this->model->get_video_hash( $attach_id );
+			// if there isn't a hash yet, we should create it
+			if ( empty( $hash ) ) {
+				$file_path = get_attached_file( $attach_id );
+				$hash = md5( md5( $file_path . get_current_user_id() . uniqid() ) );
+				update_post_meta( $attach_id, 'video_file_hash', $hash );
+			}
+			$url = $this->model->get_video_url( null, $attach_id );
+		}
+		return $url;
 	}
 
 	/**
@@ -859,6 +876,17 @@ class Video_Access_Model
 		}
 
 		return false;
+	}
+
+	public function get_video_hash( $video_id = 0, $blog_id = null )
+	{
+		$blog_id = (int) $blog_id;
+		$video_id = (int) $video_id;
+
+		Video_Access_Control::switch_to_blog( $blog_id );
+		$hash = get_post_meta( $video_id, 'video_file_hash', true );
+		Video_Access_Control::restore_current_blog();
+		return $hash;
 	}
 
 	/**
