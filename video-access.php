@@ -940,7 +940,7 @@ class Video_Access_Model
 			$hash,
 			'video'
 		) );
-		restore_current_blog();
+		Video_Access_Control::restore_current_blog();
 
 		return $url;
 	}
