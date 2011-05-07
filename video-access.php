@@ -19,6 +19,12 @@ class Video_Access_Control
 	{
 		global $wp_flexible_uploader, $video_transcoding_control;
 
+		if ( ! defined( 'VIDEO_ACCESS_SECRET_SUBDIR' ) ) {
+			// the parent directory of the video directories, meant to be unknown to the public to prevent unauthorized video access
+			// hence you should define your own value in wp-config.php
+			define( 'VIDEO_ACCESS_SECRET_DIR', '93b0f8b640c357ba3432b5d679d5aedd' );
+		}
+
 		include dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'custom_image_sizes' . DIRECTORY_SEPARATOR . 'filosofo-custom-image-sizes.php';
 		include dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'flexible_uploader' . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR  . 'core.php';
 		include dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'wp-json-rpc-api' . DIRECTORY_SEPARATOR . 'wp-json-rpc-api.php';
@@ -647,7 +653,7 @@ class Video_Access_Model
 
 	public function get_uploads_dir()
 	{
-		return WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'a124ac2f2450011e2667631a47d69c07';
+		return apply_filters( 'video_access_secret_directory', WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . VIDEO_ACCESS_SECRET_DIR );
 	}
 
 	/**
