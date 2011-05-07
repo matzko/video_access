@@ -53,6 +53,8 @@ class Video_Access_Control
 		$this->view = new Video_Access_View;
 
 		add_action( 'add_attachment', array(&$video_transcoding_control, 'remote_transcode_one_video' ) );
+		add_action( 'edit_user_profile', array( $this, 'event_edit_user_profile' ) );
+		add_action( 'edit_user_profile_update', array( $this, 'event_edit_user_profile_update' ) );
 		add_action( 'video_access_markup', array(&$this, 'event_video_access_markup' ) );
 		add_action( 'video_access_player', array($this, 'event_video_access_player'), 10, 3 );
 		add_action( 'init', array(&$this, 'event_init' ), 1 );
@@ -123,6 +125,41 @@ class Video_Access_Control
 				<?php
 			break;
 		endswitch;
+	}
+
+	public function event_edit_user_profile( $profile_user = null )
+	{
+		if ( is_super_admin() ) {
+			$user_id = isset( $profile_user->ID ) ? (int) $profile_user->ID : 0;  
+			?>
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php _e('User Video Permissions', 'video-access'); ?></th>
+					<td>
+						<label for="user-video-permissions">
+							<?php
+							echo $this->view->get_user_category_dropdown( 'user-video-permissions', (array) get_user_meta( $user_id, '_allowed_vid_cats' ) );
+							?>
+							<?php _e('Choose the video categories that this user is allowed to view.', 'video-access'); ?>
+						</label>
+					</td>
+				</tr>
+			</table>
+			<?php
+		}
+	}
+
+	public function event_edit_user_profile_update( $user_id = 0 )
+	{
+		if ( is_super_admin() ) {
+			$user_id = (int) $user_id;
+			$categories = isset( $_POST['post_category'] ) ? 
+				array_filter( array_map( 'intval', $_POST['post_category'] ) ) : array(); 
+			delete_user_meta( $user_id, '_allowed_vid_cats' );
+			foreach( $categories as $cat_id ) {
+				add_user_meta( $user_id, '_allowed_vid_cats', $cat_id );
+			}
+		}
 	}
 
 	public function event_video_access_markup( $args = array() )
@@ -219,6 +256,8 @@ class Video_Access_Control
 				'thumbnail',
 			),
 		) );
+		
+		register_taxonomy_for_object_type( 'category', 'site-video' );
 
 		add_rewrite_endpoint( 'edit-video', EP_ALL );
 		add_rewrite_endpoint( 'upload-video', EP_ALL );
@@ -521,11 +560,12 @@ class Video_Access_Control
 			switch( $video_type ) {
 				case 'video' :
 					$video_id = $this->model->get_video_by_hash( $blog_id, $video_file );
+					$video_object_id = get_post_field( 'post_parent', $video_id );
 					$name = $this->model->get_video_filename( $blog_id, $video_id );
 					$file_path = $this->model->get_video_actual_path( $blog_id, $video_id );
 					if ( 
 						file_exists( $file_path ) &&
-						current_user_can( Video_Access_Model::VIEW_CAP, $video_id )
+						current_user_can( Video_Access_Model::VIEW_CAP, $video_object_id )
 					) {
 						$size = filesize( $file_path );
 						@ header('Content-Type: application/octet-stream');
@@ -1081,6 +1121,15 @@ error_log( 'trying to write image as ' . $full_file_name . ' from ' . $tmp_path 
 
 		$allowed = false;
 
+		$allowed_video_cats = (array) get_user_meta( $user_id, '_allowed_vid_cats' );
+		$allowed_video_cats = array_filter( array_map( 'intval', $allowed_video_cats ) );
+
+		$video_cats = wp_get_object_terms($video_id, 'category', array('fields' => 'ids'));
+		$intersect = array_intersect( $allowed_video_cats, $video_cats );
+
+		if ( ! empty( $intersect ) ) {
+			$allowed = true;
+		}
 		/*
 		if ( is_super_admin() ) {
 			$allowed = true;
@@ -1104,6 +1153,21 @@ class Video_Access_View
 			return $template_file;
 		} else {
 			return false;
+		}
+	}
+
+	public function get_user_category_dropdown( $element_id = 'category-selection', $checked_cats = array() )
+	{
+		if ( class_exists( 'Walker_Category_Checklist' ) ) {
+			$taxonomy = 'category';
+			$walker = new Walker_Category_Checklist;
+			$tax = get_taxonomy( $taxonomy );
+			$categories = (array) get_terms($taxonomy, array('get' => 'all'));
+			$args = array( 
+				'selected_cats' => $checked_cats,
+				'popular_cats' => get_terms( $taxonomy, array( 'fields' => 'ids', 'orderby' => 'count', 'order' => 'DESC', 'number' => 10, 'hierarchical' => false ) ),
+			);
+			return call_user_func_array(array(&$walker, 'walk'), array($categories, 0, $args));
 		}
 	}
 
