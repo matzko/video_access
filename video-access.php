@@ -1130,11 +1130,10 @@ error_log( 'trying to write image as ' . $full_file_name . ' from ' . $tmp_path 
 		if ( ! empty( $intersect ) ) {
 			$allowed = true;
 		}
-		/*
+		
 		if ( is_super_admin() ) {
 			$allowed = true;
 		}
-		/**/
 
 		return apply_filters( 'video_access_user_video_view_permission', $allowed, $user_id, $video_id );
 	}
