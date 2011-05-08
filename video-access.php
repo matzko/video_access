@@ -187,6 +187,7 @@ class Video_Access_Control
 					
 					$video_url = $this->model->get_video_url( $blog_id, $attach_id );
 
+					$local_video_player->add_clip_value( 'scaling', 'fit' );
 					echo $local_video_player->print_video_player( $video_url, 'single-video-object-' . $attach_id, $height, $width );
 
 					if ( current_user_can(  Video_Access_Model::UPLOAD_CAP, $video_id ) ) {
@@ -218,6 +219,7 @@ class Video_Access_Control
 		$width = (int) $width;
 
 		$video_url = wp_get_attachment_url( $attach_id );
+		$local_video_player->add_clip_value( 'scaling', 'fit' );
 		echo $local_video_player->print_video_player( $video_url, 'single-video-object-' . $attach_id, $height, $width );
 	}
 
